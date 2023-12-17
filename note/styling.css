@@ -1,0 +1,27 @@
+.card {
+  font-family: arial;
+  font-size: 20px;
+  text-align: center;
+  color: black;
+  background-color: white;
+  text-align: left;
+  margin: 0 auto;
+  max-width: 600px;
+  padding: 25px;
+ }
+ 
+ th, td {
+   border: 1px solid black;
+   padding: 6px;
+   text-align: center;
+ }
+ th {
+   background-color: #c7d5dc;
+ }
+ td.ignore {
+   border: none;
+ }
+ table {
+   border-collapse: collapse;
+   font-family: sans-serif;
+ }

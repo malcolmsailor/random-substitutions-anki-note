@@ -1,0 +1,43 @@
+<!-- We use a hidden div to store \{\{Front\}\} rather than doing 
+  `populate_fields(`\{\{Vars}}`, `\{\{Front\}\});` below
+  so that backslashes will be escaped -->
+<div id="front-hidden" style="display: none">{{Front}}</div>
+<div id="math-front"></div>
+
+<script type="text/javascript">
+  var injectScript = (src) => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
+  (async () => {
+    function always_log_to_window_(txt) {
+      box = document.getElementById("console");
+      box.style.display = "block";
+      box.innerHTML = box.innerHTML + "<p>" + txt + "</p>";
+    }
+    // Check if the function defined in "_script.js" already exists
+    // in order to prevent duplicate loading of "_script.js"
+    if (typeof marked === "undefined") {
+      await injectScript("_marked.min.js");
+    }
+    if (typeof populate_fields === "undefined") {
+      await injectScript("_math_card.js");
+    }
+    const raw_front = marked.parse(
+      replace_substitute_delimiters1(document.getElementById("front-hidden").innerHTML)
+    );
+    const populated = populate_fields(`{{Vars}}`, raw_front);
+    const front_div = document.getElementById("math-front");
+    front_div.innerHTML = populated["front"];
+    if (window.MathJax) {
+      MathJax.typesetPromise([front_div]);
+    }
+  })();
+</script>
