@@ -2,7 +2,9 @@
   `populate_fields(`\{\{Vars}}`, `\{\{Front\}\});` below
   so that backslashes will be escaped -->
 <div id="front-hidden" style="display: none">{{Front}}</div>
-<div id="math-front"></div>
+<div id="math_contents">
+  <div id="math-front"></div>
+</div>
 
 <script type="text/javascript">
   var injectScript = (src) => {
@@ -31,11 +33,14 @@
       await injectScript("_math_card.js");
     }
     const raw_front = marked.parse(
-      replace_substitute_delimiters1(document.getElementById("front-hidden").innerHTML)
+      replace_substitute_delimiters_with_placeholders(
+        document.getElementById("front-hidden").innerHTML
+      )
     );
     const populated = populate_fields(`{{Vars}}`, raw_front);
+    const shuffled = apply_shuffle(populated["front"]);
     const front_div = document.getElementById("math-front");
-    front_div.innerHTML = populated["front"];
+    front_div.innerHTML = shuffled["front"];
     if (window.MathJax) {
       MathJax.typesetPromise([front_div]);
     }

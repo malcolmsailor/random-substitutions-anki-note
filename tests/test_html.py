@@ -47,13 +47,28 @@ y=3:6""",
    - effect on the price of SYM[commodity] next year: $EXP[e2 / 100]
 
 If the current price of SYM[commodity] is $EXP[price / 100], what is the expected price next year?""",
-        "Back": "\\$ EXP[(price + e1 * p1 / 100 + e2 * p2 / 100) / 100] $\\",
-        "Vars": """event1,event2=War,Hurricane,Volcano,Drought,Terrorism,Pandemic
+        "Back": "\\$$ EXP[(price + e1 * p1 / 100 + e2 * p2 / 100) / 100] $$\\",
+        "Vars": """event1,event2=Major War,Devastating Hurricane,Mammoth Volcano,Intense Drought,Terrorist attack,Global Pandemic
 commodity=oil,wheat,steel
 p1=5:25
 p2=5:25
 e1,e2=-175:175;5
 price=120:500;10""",
+    },
+    "math4": {
+        "Front": "SYM[x] and SYM[y] are SYM[z] yes indeed",
+        "Back": "",
+        "Vars": "x.1=apples,sticks\ny.1=oranges,stones\nz.1=fruit,weapons",
+    },
+    "exclusive": {
+        "Front": "SYM[x] and SYM[y]",
+        "Back": "One item should be missing and there should be a warning in the console",
+        "Vars": "x,y=apples,",
+    },
+    "rand1": {
+        "Front": "RAN1[foo] and RAN1[bar]",
+        "Back": "RAN2.1[A] and RAN2.1[B] and RAN2.1[C] and RAN2.1[D]\n\nRAN3.1[A] and RAN3.1[B] and RAN3.1[C] and RAN3.1[D]\n\nRAN4[A] and RAN4[B] and RAN4[C] and RAN4[D]",
+        "Vars": "",
     },
 }
 

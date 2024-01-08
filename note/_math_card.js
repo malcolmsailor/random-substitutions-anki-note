@@ -80,15 +80,28 @@ assert(isInteger("10323"));
 assert(!isInteger("10323.4"));
 
 function match_field(str) {
-  // remove any whitespace from str
-  str = str.replace(/\s/g, "");
+  // TODO remove
+  // // remove any whitespace from str
+  // str = str.replace(/\s/g, "");
   // split str on "=" character
   const split_str = str.split("=");
 
   // raise an error if split_str does not have exactly 2 items
   assert(split_str.length == 2, "match_field: split_str.length != 2");
 
+  var symbol_id = "";
+
   const symbols = split_str[0].split(",");
+  for (let i = 0; i < symbols.length; i++) {
+    var symbol = symbols[i];
+    if (symbol.includes(".")) {
+      assert(i == 0, "if symbol contains '.', there should only be one element");
+      const split = symbol.split(".");
+      assert(split.length == 2, "There should only be one '.' in symbol");
+      symbols[i] = split[0];
+      symbol_id = split[1];
+    }
+  }
   const raw_values = split_str[1].split(",");
   const out_values = [];
 
@@ -142,6 +155,9 @@ function match_field(str) {
       out_values.push(...char_range);
     }
   }
+  if (symbol_id) {
+    return { symbols: symbols, values: out_values, symbol_id: symbol_id };
+  }
   return { symbols: symbols, values: out_values };
 }
 
@@ -149,8 +165,13 @@ function match_field(str) {
 assert_match("x=1,2", { symbols: ["x"], values: ["1", "2"] });
 assert_match("x,y=3:5", { symbols: ["x", "y"], values: ["3", "4", "5"] });
 assert_match("x,y=3:5;2", { symbols: ["x", "y"], values: ["3", "5"] });
-assert_match("1, 2=f:h", { symbols: ["1", "2"], values: ["f", "g", "h"] });
+assert_match("1,2=f:h", { symbols: ["1", "2"], values: ["f", "g", "h"] });
 assert_match("1,2=1,3:5,f:h", { symbols: ["1", "2"], values: ["1", "3", "4", "5", "f", "g", "h"] });
+assert_match("x=big deal,small potatoes", {
+  symbols: ["x"],
+  values: ["big deal", "small potatoes"],
+});
+assert_match("x.1=1,2", { symbols: ["x"], values: ["1", "2"], symbol_id: "1" });
 
 function merge_symbol_to_values(array_of_symbols_to_values) {
   const out = {};
@@ -159,7 +180,7 @@ function merge_symbol_to_values(array_of_symbols_to_values) {
     const symbols = sym_to_vals["symbols"];
     for (let j = 0; j < symbols.length; j++) {
       const symbol = symbols[j];
-      out[symbol] = sym_to_vals["values"];
+      out[symbol] = { values: sym_to_vals["values"], symbol_id: sym_to_vals["symbol_id"] };
     }
   }
   return out;
@@ -172,13 +193,31 @@ assert(
       { symbols: ["x"], values: ["1", "2"] },
       { symbols: ["1", "2"], values: ["f", "g", "h"] },
     ]),
-    { x: ["1", "2"], 1: ["f", "g", "h"], 2: ["f", "g", "h"] }
+    {
+      x: { values: ["1", "2"], symbol_id: undefined },
+      1: { values: ["f", "g", "h"], symbol_id: undefined },
+      2: { values: ["f", "g", "h"], symbol_id: undefined },
+    }
   )
 );
 
+function remove_value(idx, values) {
+  var value = values[idx];
+  values[idx] = values.pop();
+  return value;
+}
+
 function choose_value(seeded_rand, choices) {
   var i = Math.floor(seeded_rand() * choices.length);
-  return choices[i];
+  // console.log("before: " + choices.toString());
+  if (i < choices.length - 1) {
+    // We need to rearrange the array
+    var choice = remove_value(i, choices);
+  } else {
+    var choice = choices.pop();
+  }
+  // console.log("after: " + choices.toString());
+  return { idx: i, choice: choice };
 }
 
 function replace_symbol(symbol, value, text) {
@@ -300,24 +339,37 @@ assert(
 //     "\\({EXP[x + y] \\choose SYM[x]}\\)"
 // );
 
-function replace_substitute_delimiters1(text) {
+function replace_substitute_delimiters_with_placeholders(text) {
+  text = text.replace(/\\\$\$/g, "START_MATHJAX_BLOCK");
+  text = text.replace(/\$\$\\/g, "STOP_MATHJAX_BLOCK");
   text = text.replace(/\\\$/g, "START_MATHJAX");
   text = text.replace(/\$\\/g, "STOP_MATHJAX");
   return text;
 }
 
-function replace_substitute_delimiters(text) {
+function replace_placeholders_with_delimiters(text) {
+  text = text.replace(/START_MATHJAX_BLOCK/g, "\\[");
+  text = text.replace(/STOP_MATHJAX_BLOCK/g, "\\]");
   text = text.replace(/START_MATHJAX/g, "\\(");
   text = text.replace(/STOP_MATHJAX/g, "\\)");
   return text;
 }
-// assert(
-//   replace_substitute_delimiters("\\${EXP[x + y] \\choose SYM[x]}$\\") ==
-//     "\\({EXP[x + y] \\choose SYM[x]}\\)"
-// );
 assert(
-  replace_substitute_delimiters("START_MATHJAX{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX") ==
+  replace_substitute_delimiters_with_placeholders("\\${EXP[x + y] \\choose SYM[x]}$\\") ==
+    "START_MATHJAX{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX"
+);
+assert(
+  replace_substitute_delimiters_with_placeholders("\\$${EXP[x + y] \\choose SYM[x]}$$\\") ==
+    "START_MATHJAX_BLOCK{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX_BLOCK"
+);
+assert(
+  replace_placeholders_with_delimiters("START_MATHJAX{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX") ==
     "\\({EXP[x + y] \\choose SYM[x]}\\)"
+);
+assert(
+  replace_placeholders_with_delimiters(
+    "START_MATHJAX_BLOCK{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX_BLOCK"
+  ) == "\\[{EXP[x + y] \\choose SYM[x]}\\]"
 );
 
 function populate_fields(vars_field, front, back) {
@@ -346,12 +398,29 @@ function populate_fields(vars_field, front, back) {
 
     array_of_symbols_to_values.push(match_field(vars_fields[f_i]));
   }
-
+  // console.log(array_of_symbols_to_values);
   const symbol_to_values = merge_symbol_to_values(array_of_symbols_to_values);
+  // console.log(symbol_to_values);
   const symbol_to_value = {};
+  const id_to_idx = {};
 
   for (let symbol in symbol_to_values) {
-    const value = choose_value(seeded_rand, symbol_to_values[symbol]);
+    const values = symbol_to_values[symbol];
+    if (values["symbol_id"] in id_to_idx) {
+      var value = remove_value(id_to_idx[values["symbol_id"]], values["values"]);
+    } else {
+      const result = choose_value(seeded_rand, values["values"]);
+      var value = result["choice"];
+      // TODO allow symbol_id of 0?
+      if (values["symbol_id"]) {
+        id_to_idx[values["symbol_id"]] = result["idx"];
+      }
+    }
+    if (!value) {
+      // TODO maybe the user wants an empty string; it should be possible to check
+      //  specifically for undefined
+      console.log("WARNING: No choices for symbol " + symbol);
+    }
     front = replace_symbol(symbol, value, front);
     if (back) {
       back = replace_symbol(symbol, value, back);
@@ -360,11 +429,157 @@ function populate_fields(vars_field, front, back) {
   }
 
   front = replace_expressions(symbol_to_value, front);
-  front = replace_substitute_delimiters(front);
+  front = replace_placeholders_with_delimiters(front);
   if (back) {
     back = replace_expressions(symbol_to_value, back);
-    back = replace_substitute_delimiters(back);
+    back = replace_placeholders_with_delimiters(back);
   }
 
+  return { front: front, back: back };
+}
+
+function find_shuffle_tags(text) {
+  const re = new RegExp(
+    "RAN(?<shuffle_group>\\d+)(?:.(?<group_idx>\\d+))?\\[(?<content>[^\\]]*)\\]",
+    "g"
+  );
+  const matches = text.matchAll(re);
+  const out = {
+    shuffle_groups: new Set([]),
+    group_idxs: {},
+    contents: {},
+    match_text: {},
+  };
+  for (const match of matches) {
+    const shuffle_group = match.groups["shuffle_group"];
+    out["shuffle_groups"].add(shuffle_group);
+    if (shuffle_group in out["group_idxs"]) {
+      assert(
+        match.groups["group_idx"] == out["group_idxs"][shuffle_group],
+        "All members of shuffle group must have same group index (following the dot)"
+      );
+    } else if (match.groups["group_idx"]) {
+      out["group_idxs"][shuffle_group] = match.groups["group_idx"];
+    }
+    if (!(shuffle_group in out["contents"])) {
+      out["contents"][shuffle_group] = [];
+    }
+    out["contents"][shuffle_group].push(match.groups["content"]);
+    if (!(shuffle_group in out["match_text"])) {
+      out["match_text"][shuffle_group] = [];
+    }
+    out["match_text"][shuffle_group].push(match[0]);
+  }
+  return out;
+}
+
+// find_shuffle_tags unit tests
+assert(
+  objectsAreEqual(find_shuffle_tags("abcRAN1[foo]def"), {
+    shuffle_groups: new Set(["1"]),
+    group_idxs: {},
+    contents: { 1: ["foo"] },
+    match_text: { 1: ["RAN1[foo]"] },
+  })
+);
+assert(
+  objectsAreEqual(find_shuffle_tags("RAN1.1[foo] RAN1.1[bar] RAN2.1[hi] RAN2.1[bye]"), {
+    shuffle_groups: new Set(["1", "2"]),
+    group_idxs: { 1: "1", 2: "1" },
+    contents: { 1: ["foo", "bar"], 2: ["hi", "bye"] },
+    match_text: {
+      1: ["RAN1.1[foo]", "RAN1.1[bar]"],
+      2: ["RAN2.1[hi]", "RAN2.1[bye]"],
+    },
+  })
+);
+assert(
+  objectsAreEqual(find_shuffle_tags("RAN1[]"), {
+    shuffle_groups: new Set(["1"]),
+    group_idxs: {},
+    contents: { 1: [""] },
+    match_text: { 1: ["RAN1[]"] },
+  })
+);
+
+function mulberry32int(a) {
+  // From https://stackoverflow.com/a/47593316/10155119 but modified to return integers
+  return function () {
+    var t = (a += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return (t ^ (t >>> 14)) >>> 0;
+  };
+}
+
+function shuffle(arr, seeded_rand_int) {
+  // const out_arr = arr.slice(); // copy arr
+
+  for (let i = 0; i < arr.length; i++) {
+    const rando = seeded_rand_int();
+    const dest = (rando % (arr.length - i)) + i;
+    const temp = arr[dest];
+    arr[dest] = arr[i];
+    arr[i] = temp;
+  }
+}
+
+function apply_shuffle_replacement(text, indices, match_texts, contents) {
+  for (let src_i = 0; src_i < indices.length; src_i++) {
+    const dst_i = indices[src_i];
+    const old_str = match_texts[src_i];
+    const new_str = contents[dst_i];
+    text = text.replace(old_str, new_str);
+  }
+  return text;
+}
+
+function apply_shuffle_subroutine(text, seeded_rand_int) {
+  const shuffle_tags = find_shuffle_tags(text);
+  console.log(shuffle_tags);
+  group_idx_indices = {};
+  for (const shuffle_tag of shuffle_tags["shuffle_groups"].values()) {
+    console.log(shuffle_tag);
+    const group_idx = shuffle_tags["group_idxs"][shuffle_tag];
+    const contents = shuffle_tags["contents"][shuffle_tag];
+    if (group_idx && group_idx in group_idx_indices) {
+      indices = group_idx_indices[group_idx];
+    } else {
+      const n_members = contents.length;
+      var indices = [];
+      for (let i = 0; i < n_members; i++) {
+        indices.push(i);
+      }
+      shuffle(indices, seeded_rand_int);
+      if (group_idx) {
+        group_idx_indices[group_idx] = indices;
+      }
+    }
+    text = apply_shuffle_replacement(
+      text,
+      indices,
+      shuffle_tags["match_text"][shuffle_tag],
+      contents
+    );
+  }
+  return text;
+}
+
+function apply_shuffle(front, back) {
+  // Shuffle syntax:
+  // Items enclosed in RANx.y[] tags will be shuffled together, where `x` is a
+  //  nonnegative integer. All items with the same value of `x` are shuffled
+  //  together (i.e., they form a "shuffle group").
+  // The '.y' is optional. `y` is also a nonnegative integer. All shuffle groups
+  //  with the same value of `y` are shuffled in the same order. (E.g., if RAN1.1
+  //  is shuffled in the order (2, 1, 3), then RAN2.1 and RAN3.1 will also be given
+  //  this order)
+  // Shuffle groups must be contained within either front or back.
+  // For now shuffling isn't at all coordinated between front and back
+  const seeded_rand_int = mulberry32int(hash_str(front) + get_date() + 3);
+  front = apply_shuffle_subroutine(front, seeded_rand_int);
+  if (back) {
+    back = apply_shuffle_subroutine(back, seeded_rand_int);
+  }
   return { front: front, back: back };
 }

@@ -2,10 +2,12 @@
   `populate_fields(`\{\{Vars}}`, `\{\{Front\}\});` below
   so that backslashes will be escaped -->
 <div id="front-hidden" style="display: none">{{Front}}</div>
-<div id="math-front"></div>
-<hr id="answer" />
 <div id="back-hidden" style="display: none">{{Back}}</div>
-<div id="math-back"></div>
+<div id="math_contents">
+  <div id="math-front"></div>
+  <hr id="answer" />
+  <div id="math-back"></div>
+</div>
 
 <script type="text/javascript">
   var injectScript = (src) => {
@@ -34,17 +36,22 @@
       await injectScript("_math_card.js");
     }
     const raw_front = marked.parse(
-      replace_substitute_delimiters1(document.getElementById("front-hidden").innerHTML)
+      replace_substitute_delimiters_with_placeholders(
+        document.getElementById("front-hidden").innerHTML
+      )
     );
     const raw_back = marked.parse(
-      replace_substitute_delimiters1(document.getElementById("back-hidden").innerHTML)
+      replace_substitute_delimiters_with_placeholders(
+        document.getElementById("back-hidden").innerHTML
+      )
     );
     const populated = populate_fields(`{{Vars}}`, raw_front, raw_back);
+    const shuffled = apply_shuffle(populated["front"], populated["back"]);
     const front_div = document.getElementById("math-front");
-    front_div.innerHTML = populated["front"];
+    front_div.innerHTML = shuffled["front"];
     const back_div = document.getElementById("math-back");
-    back_div.innerHTML = populated["back"];
-    console.log(populated["back"]);
+    back_div.innerHTML = shuffled["back"];
+    // console.log(populated["back"]);
     if (window.MathJax) {
       MathJax.typesetPromise([front_div]);
       MathJax.typesetPromise([back_div]);
