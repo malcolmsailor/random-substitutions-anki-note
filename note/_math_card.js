@@ -80,15 +80,28 @@ assert(isInteger("10323"));
 assert(!isInteger("10323.4"));
 
 function match_field(str) {
-  // remove any whitespace from str
-  str = str.replace(/\s/g, "");
+  // TODO remove
+  // // remove any whitespace from str
+  // str = str.replace(/\s/g, "");
   // split str on "=" character
   const split_str = str.split("=");
 
   // raise an error if split_str does not have exactly 2 items
   assert(split_str.length == 2, "match_field: split_str.length != 2");
 
+  var symbol_id = "";
+
   const symbols = split_str[0].split(",");
+  for (let i = 0; i < symbols.length; i++) {
+    var symbol = symbols[i];
+    if (symbol.includes(".")) {
+      assert(i == 0, "if symbol contains '.', there should only be one element");
+      const split = symbol.split(".");
+      assert(split.length == 2, "There should only be one '.' in symbol");
+      symbols[i] = split[0];
+      symbol_id = split[1];
+    }
+  }
   const raw_values = split_str[1].split(",");
   const out_values = [];
 
@@ -142,6 +155,9 @@ function match_field(str) {
       out_values.push(...char_range);
     }
   }
+  if (symbol_id) {
+    return { symbols: symbols, values: out_values, symbol_id: symbol_id };
+  }
   return { symbols: symbols, values: out_values };
 }
 
@@ -149,8 +165,13 @@ function match_field(str) {
 assert_match("x=1,2", { symbols: ["x"], values: ["1", "2"] });
 assert_match("x,y=3:5", { symbols: ["x", "y"], values: ["3", "4", "5"] });
 assert_match("x,y=3:5;2", { symbols: ["x", "y"], values: ["3", "5"] });
-assert_match("1, 2=f:h", { symbols: ["1", "2"], values: ["f", "g", "h"] });
+assert_match("1,2=f:h", { symbols: ["1", "2"], values: ["f", "g", "h"] });
 assert_match("1,2=1,3:5,f:h", { symbols: ["1", "2"], values: ["1", "3", "4", "5", "f", "g", "h"] });
+assert_match("x=big deal,small potatoes", {
+  symbols: ["x"],
+  values: ["big deal", "small potatoes"],
+});
+assert_match("x.1=1,2", { symbols: ["x"], values: ["1", "2"], symbol_id: "1" });
 
 function merge_symbol_to_values(array_of_symbols_to_values) {
   const out = {};
@@ -346,8 +367,9 @@ function populate_fields(vars_field, front, back) {
 
     array_of_symbols_to_values.push(match_field(vars_fields[f_i]));
   }
-
+  console.log(array_of_symbols_to_values);
   const symbol_to_values = merge_symbol_to_values(array_of_symbols_to_values);
+  console.log(symbol_to_values);
   const symbol_to_value = {};
 
   for (let symbol in symbol_to_values) {

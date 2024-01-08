@@ -1,5 +1,8 @@
 <!-- TODO 2023-12-17 implement "dependent" choices. E.g., if x=job, then y=employment -->
-<!-- TODO 2023-12-17 allow spaces in replacement fields -->
+<!-- TODO revise syntax -->
+<!-- TODO allow shuffling the order of items in an expression -->
+<!-- TODO 2023-12-18 remove <br> and <p> </p> tags -->
+<!-- TODO why don't braces in \$ \{ \} $\ show up? -->
 
 This Anki note type attempts to make math practice cards more diverse/interesting by randomizing specified. Ideally this should force your mind to remember the essential points, rather than unimportant details like what the variable names are.
 

@@ -48,12 +48,17 @@ y=3:6""",
 
 If the current price of SYM[commodity] is $EXP[price / 100], what is the expected price next year?""",
         "Back": "\\$ EXP[(price + e1 * p1 / 100 + e2 * p2 / 100) / 100] $\\",
-        "Vars": """event1,event2=War,Hurricane,Volcano,Drought,Terrorism,Pandemic
+        "Vars": """event1,event2=Major War,Devastating Hurricane,Mammoth Volcano,Intense Drought,Terrorist attack,Global Pandemic
 commodity=oil,wheat,steel
 p1=5:25
 p2=5:25
 e1,e2=-175:175;5
 price=120:500;10""",
+    },
+    "math4": {
+        "Front": "SYM[x] and SYM[y]",
+        "Back": "",
+        "Vars": "x.1=apples,sticks\ny.1=sticks,bones",
     },
 }
 
