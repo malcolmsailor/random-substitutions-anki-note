@@ -18,7 +18,10 @@ function objectsAreEqual(obj1, obj2) {
     // Check if the property values are objects
     // If they are, recursively call the function
     const areObjects = isObject(val1) && isObject(val2);
-    if ((areObjects && !objectsAreEqual(val1, val2)) || (!areObjects && val1 !== val2)) {
+    if (
+      (areObjects && !objectsAreEqual(val1, val2)) ||
+      (!areObjects && val1 !== val2)
+    ) {
       return false;
     }
   }
@@ -80,9 +83,6 @@ assert(isInteger("10323"));
 assert(!isInteger("10323.4"));
 
 function match_field(str) {
-  // TODO remove
-  // // remove any whitespace from str
-  // str = str.replace(/\s/g, "");
   // split str on "=" character
   const split_str = str.split("=");
 
@@ -95,7 +95,10 @@ function match_field(str) {
   for (let i = 0; i < symbols.length; i++) {
     var symbol = symbols[i];
     if (symbol.includes(".")) {
-      assert(i == 0, "if symbol contains '.', there should only be one element");
+      assert(
+        i == 0,
+        "if symbol contains '.', there should only be one element"
+      );
       const split = symbol.split(".");
       assert(split.length == 2, "There should only be one '.' in symbol");
       symbols[i] = split[0];
@@ -145,7 +148,10 @@ function match_field(str) {
       // check that character code for `start` is less than for `end`
       const start_char_code = start.charCodeAt(0);
       const end_char_code = end.charCodeAt(0);
-      assert(start_char_code < end_char_code, "start_char_code >= end_char_code");
+      assert(
+        start_char_code < end_char_code,
+        "start_char_code >= end_char_code"
+      );
       // create an array containing all characters in the range from start to end,
       //     inclusive
       const char_range = [];
@@ -166,7 +172,10 @@ assert_match("x=1,2", { symbols: ["x"], values: ["1", "2"] });
 assert_match("x,y=3:5", { symbols: ["x", "y"], values: ["3", "4", "5"] });
 assert_match("x,y=3:5;2", { symbols: ["x", "y"], values: ["3", "5"] });
 assert_match("1,2=f:h", { symbols: ["1", "2"], values: ["f", "g", "h"] });
-assert_match("1,2=1,3:5,f:h", { symbols: ["1", "2"], values: ["1", "3", "4", "5", "f", "g", "h"] });
+assert_match("1,2=1,3:5,f:h", {
+  symbols: ["1", "2"],
+  values: ["1", "3", "4", "5", "f", "g", "h"],
+});
 assert_match("x=big deal,small potatoes", {
   symbols: ["x"],
   values: ["big deal", "small potatoes"],
@@ -180,7 +189,10 @@ function merge_symbol_to_values(array_of_symbols_to_values) {
     const symbols = sym_to_vals["symbols"];
     for (let j = 0; j < symbols.length; j++) {
       const symbol = symbols[j];
-      out[symbol] = { values: sym_to_vals["values"], symbol_id: sym_to_vals["symbol_id"] };
+      out[symbol] = {
+        values: sym_to_vals["values"],
+        symbol_id: sym_to_vals["symbol_id"],
+      };
     }
   }
   return out;
@@ -209,14 +221,12 @@ function remove_value(idx, values) {
 
 function choose_value(seeded_rand, choices) {
   var i = Math.floor(seeded_rand() * choices.length);
-  // console.log("before: " + choices.toString());
   if (i < choices.length - 1) {
     // We need to rearrange the array
     var choice = remove_value(i, choices);
   } else {
     var choice = choices.pop();
   }
-  // console.log("after: " + choices.toString());
   return { idx: i, choice: choice };
 }
 
@@ -234,8 +244,9 @@ function parse_expr(str) {
 }
 
 const FACTORIAL_VALUES = [
-  1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800,
-  87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000,
+  1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600,
+  6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000,
+  6402373705728000,
 ];
 
 function evaluate_factorials(text) {
@@ -299,7 +310,6 @@ function replace_expressions(symbol_to_value, text) {
     }
     const intermediate = evaluate_factorials(expr_str);
     const result = parse_expr(intermediate).toString();
-    // convert result to string
 
     // replace `text` from `start` to `end` with `result`
     text = text.slice(0, start) + result + text.slice(end);
@@ -310,13 +320,20 @@ function replace_expressions(symbol_to_value, text) {
 }
 
 // replace_expressions unit tests
-assert(replace_expressions({ x: "2", y: "7" }, "Nothing to replace") == "Nothing to replace");
 assert(
-  replace_expressions({ x: "2", y: "7", xy: "5" }, "Prefix EXP[x * (y + 1) - xy] suffix") ==
-    "Prefix 11 suffix"
+  replace_expressions({ x: "2", y: "7" }, "Nothing to replace") ==
+    "Nothing to replace"
+);
+assert(
+  replace_expressions(
+    { x: "2", y: "7", xy: "5" },
+    "Prefix EXP[x * (y + 1) - xy] suffix"
+  ) == "Prefix 11 suffix"
 );
 assert(replace_expressions({ x: "2", y: "7" }, "A EXP[y] B") == "A 7 B");
-assert(replace_expressions({ x: "2", y: "7" }, "A EXP[x] EXP[y] B") == "A 2 7 B");
+assert(
+  replace_expressions({ x: "2", y: "7" }, "A EXP[x] EXP[y] B") == "A 2 7 B"
+);
 assert(
   replace_expressions(
     { x: "2", y: "7", xy: "5" },
@@ -355,16 +372,19 @@ function replace_placeholders_with_delimiters(text) {
   return text;
 }
 assert(
-  replace_substitute_delimiters_with_placeholders("\\${EXP[x + y] \\choose SYM[x]}$\\") ==
+  replace_substitute_delimiters_with_placeholders(
+    "\\${EXP[x + y] \\choose SYM[x]}$\\"
+  ) == "START_MATHJAX{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX"
+);
+assert(
+  replace_substitute_delimiters_with_placeholders(
+    "\\$${EXP[x + y] \\choose SYM[x]}$$\\"
+  ) == "START_MATHJAX_BLOCK{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX_BLOCK"
+);
+assert(
+  replace_placeholders_with_delimiters(
     "START_MATHJAX{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX"
-);
-assert(
-  replace_substitute_delimiters_with_placeholders("\\$${EXP[x + y] \\choose SYM[x]}$$\\") ==
-    "START_MATHJAX_BLOCK{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX_BLOCK"
-);
-assert(
-  replace_placeholders_with_delimiters("START_MATHJAX{EXP[x + y] \\choose SYM[x]}STOP_MATHJAX") ==
-    "\\({EXP[x + y] \\choose SYM[x]}\\)"
+  ) == "\\({EXP[x + y] \\choose SYM[x]}\\)"
 );
 assert(
   replace_placeholders_with_delimiters(
@@ -398,27 +418,25 @@ function populate_fields(vars_field, front, back) {
 
     array_of_symbols_to_values.push(match_field(vars_fields[f_i]));
   }
-  // console.log(array_of_symbols_to_values);
   const symbol_to_values = merge_symbol_to_values(array_of_symbols_to_values);
-  // console.log(symbol_to_values);
   const symbol_to_value = {};
   const id_to_idx = {};
 
   for (let symbol in symbol_to_values) {
     const values = symbol_to_values[symbol];
     if (values["symbol_id"] in id_to_idx) {
-      var value = remove_value(id_to_idx[values["symbol_id"]], values["values"]);
+      var value = remove_value(
+        id_to_idx[values["symbol_id"]],
+        values["values"]
+      );
     } else {
       const result = choose_value(seeded_rand, values["values"]);
       var value = result["choice"];
-      // TODO allow symbol_id of 0?
       if (values["symbol_id"]) {
         id_to_idx[values["symbol_id"]] = result["idx"];
       }
     }
     if (!value) {
-      // TODO maybe the user wants an empty string; it should be possible to check
-      //  specifically for undefined
       console.log("WARNING: No choices for symbol " + symbol);
     }
     front = replace_symbol(symbol, value, front);
@@ -434,7 +452,6 @@ function populate_fields(vars_field, front, back) {
     back = replace_expressions(symbol_to_value, back);
     back = replace_placeholders_with_delimiters(back);
   }
-
   return { front: front, back: back };
 }
 
@@ -483,15 +500,18 @@ assert(
   })
 );
 assert(
-  objectsAreEqual(find_shuffle_tags("RAN1.1[foo] RAN1.1[bar] RAN2.1[hi] RAN2.1[bye]"), {
-    shuffle_groups: new Set(["1", "2"]),
-    group_idxs: { 1: "1", 2: "1" },
-    contents: { 1: ["foo", "bar"], 2: ["hi", "bye"] },
-    match_text: {
-      1: ["RAN1.1[foo]", "RAN1.1[bar]"],
-      2: ["RAN2.1[hi]", "RAN2.1[bye]"],
-    },
-  })
+  objectsAreEqual(
+    find_shuffle_tags("RAN1.1[foo] RAN1.1[bar] RAN2.1[hi] RAN2.1[bye]"),
+    {
+      shuffle_groups: new Set(["1", "2"]),
+      group_idxs: { 1: "1", 2: "1" },
+      contents: { 1: ["foo", "bar"], 2: ["hi", "bye"] },
+      match_text: {
+        1: ["RAN1.1[foo]", "RAN1.1[bar]"],
+        2: ["RAN2.1[hi]", "RAN2.1[bye]"],
+      },
+    }
+  )
 );
 assert(
   objectsAreEqual(find_shuffle_tags("RAN1[]"), {
@@ -536,10 +556,8 @@ function apply_shuffle_replacement(text, indices, match_texts, contents) {
 
 function apply_shuffle_subroutine(text, seeded_rand_int) {
   const shuffle_tags = find_shuffle_tags(text);
-  console.log(shuffle_tags);
   group_idx_indices = {};
   for (const shuffle_tag of shuffle_tags["shuffle_groups"].values()) {
-    console.log(shuffle_tag);
     const group_idx = shuffle_tags["group_idxs"][shuffle_tag];
     const contents = shuffle_tags["contents"][shuffle_tag];
     if (group_idx && group_idx in group_idx_indices) {
