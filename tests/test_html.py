@@ -66,7 +66,7 @@ price=120:500;10""",
         "Vars": "x,y=apples,",
     },
     "rand1": {
-        "Front": "RAN1[foo] and RAN1[bar]",
+        "Front": "RAN2.1[A] and RAN2.1[B] and RAN2.1[C] and RAN2.1[D]\n\nRAN3.1[A] and RAN3.1[B] and RAN3.1[C] and RAN3.1[D]\n\nRAN4[A] and RAN4[B] and RAN4[C] and RAN4[D]",
         "Back": "RAN2.1[A] and RAN2.1[B] and RAN2.1[C] and RAN2.1[D]\n\nRAN3.1[A] and RAN3.1[B] and RAN3.1[C] and RAN3.1[D]\n\nRAN4[A] and RAN4[B] and RAN4[C] and RAN4[D]",
         "Vars": "",
     },
