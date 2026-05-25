@@ -285,6 +285,41 @@ assert(evaluate_factorials("Foo 4! BAR") == "Foo 24 BAR");
 // assert(evaluate_factorials("-1!")); // should raise an error
 // assert(evaluate_factorials(`${FACTORIAL_VALUES.length}!`)); // should raise an error
 
+function formatNumber(num) {
+  const absNum = Math.abs(num);
+  if (absNum === 0) return "0";
+
+  // Calculate significant digits needed
+  const magnitude = Math.floor(Math.log10(absNum));
+
+  if (magnitude < -3 || magnitude > 10) {
+    // Use scientific notation for very small or large numbers
+    return num.toExponential(3);
+  }
+
+  if (magnitude < 0) {
+    // For small numbers, show up to |magnitude| + 3 decimal places
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: Math.abs(magnitude) + 3,
+    }).format(num);
+  }
+
+  // For normal range numbers
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 3,
+  }).format(num);
+}
+
+// Examples:
+assert(formatNumber(0.003) == "0.003");
+assert(formatNumber(0.00003) == "3.000e-5");
+assert(formatNumber(0.1) == "0.1");
+assert(formatNumber(5.236) == "5.236");
+assert(formatNumber(10000) == "10,000");
+assert(formatNumber(100000000000) == "1.000e+11");
+
 function replace_expressions(symbol_to_value, text) {
   // symbols in expressions must be separated by white-space or other word-boundaries
 
@@ -309,7 +344,7 @@ function replace_expressions(symbol_to_value, text) {
       expr_str = expr_str.replace(symbol_re, value);
     }
     const intermediate = evaluate_factorials(expr_str);
-    const result = parse_expr(intermediate).toString();
+    const result = formatNumber(parse_expr(intermediate));
 
     // replace `text` from `start` to `end` with `result`
     text = text.slice(0, start) + result + text.slice(end);
