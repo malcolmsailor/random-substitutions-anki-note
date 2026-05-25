@@ -1,0 +1,31 @@
+<div id="func-hidden" style="display: none">{{Function}}</div>
+<div id="js-hidden" style="display: none">{{Javascript}}</div>
+<div id="container">
+  <div id="function"></div>
+</div>
+<script type="text/javascript">
+  var injectScript = (src) => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
+  (async () => {
+    if (typeof populate_fields === "undefined") {
+      await injectScript("_math_card.js");
+    }
+    const raw_func = document.getElementById("func-hidden").innerHTML;
+    const raw_js = document.getElementById("js-hidden").innerHTML;
+    const populated = populate_fields(`{{Vars}}`, raw_func, raw_js);
+    const func_div = document.getElementById("function");
+    func_div.innerHTML = "Draw \\(" + populated["front"] + "\\)";
+    if (window.MathJax) {
+      MathJax.typesetPromise([func_div]);
+    }
+  })();
+</script>

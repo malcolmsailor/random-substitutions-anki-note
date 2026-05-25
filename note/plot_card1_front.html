@@ -1,0 +1,42 @@
+<div id="func-hidden" style="display: none">{{Function}}</div>
+<div id="js-hidden" style="display: none">{{Javascript}}</div>
+<div id="container">
+  <div id="question">Which function is plotted?</div>
+  <canvas id="plotArea" width="400" height="400"></canvas>
+</div>
+<script type="text/javascript">
+  var injectScript = (src) => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
+  (async () => {
+    if (typeof populate_fields === "undefined") {
+      await injectScript("_math_card.js");
+    }
+    const raw_func = document.getElementById("func-hidden").innerHTML;
+    const raw_js = document.getElementById("js-hidden").innerHTML;
+    const populated = populate_fields(`{{Vars}}`, raw_func, raw_js);
+
+    // Check if the function defined in "_script.js" already exists
+    // in order to prevent duplicate loading of "_script.js"
+    if (typeof Chart === "undefined") {
+      await injectScript("_chart.js");
+    }
+    const ctx = document.getElementById("plotArea").getContext("2d");
+    if (typeof get_data === "undefined") {
+      await injectScript("_plot_card.js");
+    }
+    const data = get_data(populated["back"]);
+    const config = get_config(data);
+
+    // Render the chart
+    const myChart = new Chart(ctx, config);
+  })();
+</script>
